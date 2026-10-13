@@ -1,0 +1,25 @@
+workflows:
+  android-manual-build:
+    name: Compilacion Manual de APK Wifite
+    max_build_duration: 10
+    environment:
+      android_ssl: true
+    triggering:
+      events:
+        - push
+    scripts:
+      - name: Compilar codigo Java a Bytecode
+        script: |
+          cd app/src/main/java/com/tuusuario/wifitetplink
+          javac -cp $ANDROID_SDK_ROOT/platforms/android-34/android.jar *.java
+      - name: Convertir a formato Android DEX
+        script: |
+          cd app/src/main/java/com/tuusuario/wifitetplink
+          $ANDROID_SDK_ROOT/build-tools/34.0.0/d8 --output=classes.dex *.class
+          mv classes.dex ../../../../../
+      - name: Empaquetar APK Final
+        script: |
+          $ANDROID_SDK_ROOT/build-tools/34.0.0/aapt package -F TP-Link_Wifite_Mobile.apk -M app/src/main/AndroidManifest.xml -S app/src/main/res -I $ANDROID_SDK_ROOT/platforms/android-34/android.jar -f
+          zip -g TP-Link_Wifite_Mobile.apk classes.dex
+    artifacts:
+      - "*.apk"
